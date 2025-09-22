@@ -33,6 +33,12 @@
     <ClInclude Include="models.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BackgroundGrid.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Viewer.cpp">
@@ -48,6 +54,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MeshGenerator2D.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BackgroundGrid.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

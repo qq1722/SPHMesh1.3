@@ -128,14 +128,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BackgroundGrid.h" />
     <ClInclude Include="Boundary.h" />
     <ClInclude Include="MeshGenerator2D.h" />
     <ClInclude Include="models.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Simulation2D.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="Viewer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BackgroundGrid.cpp" />
     <ClCompile Include="Boundary.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MeshGenerator2D.cpp" />
