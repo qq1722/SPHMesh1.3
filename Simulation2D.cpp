@@ -1,289 +1,155 @@
-//#include "Simulation2D.h"
-//#include "Boundary.h" // 包含Boundary头文件
-//#include <random>
-//#include <algorithm>
-//
-//// 构造函数实现
-//Simulation2D::Simulation2D(const Boundary& boundary)
-//    : boundary_(boundary) {
-//    initialize_particles(boundary_);
-//}
-//
-//// 核心修改：混合策略的粒子初始化
-//void Simulation2D::initialize_particles(const Boundary& boundary) {
-//    particles_.clear();
-//
-//    // 获取边界的包围盒
-//    const glm::vec4& aabb = boundary.get_aabb();
-//    float x_min = aabb.x;
-//    float y_min = aabb.y;
-//    float x_max = aabb.z;
-//    float y_max = aabb.w;
-//
-//    // 在包围盒内遍历背景网格
-//    for (float x = x_min; x <= x_max; x += h_) {
-//        for (float y = y_min; y <= y_max; y += h_) {
-//            glm::vec2 current_pos(x, y);
-//
-//            // 1. 如果网格点在边界内部，就创建一个粒子
-//            if (boundary.is_inside(current_pos)) {
-//                Particle p;
-//                p.position = current_pos;
-//                p.velocity = glm::vec2(0.0f);
-//                p.force = glm::vec2(0.0f);
-//
-//                // 2. 判断该粒子是否为“安全的”内部粒子
-//                // 检查它周围8个邻居是否也都在边界内部
-//                bool is_safe =
-//                    boundary.is_inside({ x + h_, y }) &&
-//                    boundary.is_inside({ x - h_, y }) &&
-//                    boundary.is_inside({ x,       y + h_ }) &&
-//                    boundary.is_inside({ x,       y - h_ }) &&
-//                    boundary.is_inside({ x + h_, y + h_ }) &&
-//                    boundary.is_inside({ x - h_, y + h_ }) &&
-//                    boundary.is_inside({ x + h_, y - h_ }) &&
-//                    boundary.is_inside({ x - h_, y - h_ });
-//
-//                // 如果安全，就标记为固定粒子
-//                p.is_fixed = is_safe;
-//
-//                particles_.push_back(p);
-//            }
-//        }
-//    }
-//    num_particles_ = particles_.size();
-//    positions_for_render_.resize(num_particles_);
-//}
-//
-//
-//void Simulation2D::compute_forces() {
-//    for (auto& p : particles_) {
-//        p.force = glm::vec2(0.0f, 0.0f);
-//    }
-//
-//    for (int i = 0; i < num_particles_; ++i) {
-//        for (int j = i + 1; j < num_particles_; ++j) {
-//            glm::vec2 diff = particles_[i].position - particles_[j].position;
-//            float dist_sq = glm::dot(diff, diff);
-//
-//            // 作用半径比网格尺寸稍大一点，确保邻居间有作用力
-//            float effective_h = h_ * 1.5f;
-//
-//            if (dist_sq < effective_h * effective_h && dist_sq > 1e-8) {
-//                float dist = std::sqrt(dist_sq);
-//                float force_magnitude = stiffness_ * (effective_h - dist) / dist; // 简化的SPH压力
-//
-//                glm::vec2 force = force_magnitude * diff;
-//
-//                particles_[i].force += force;
-//                particles_[j].force -= force;
-//            }
-//        }
-//    }
-//}
-//
-//
-//void Simulation2D::update_positions() {
-//    float mass = 1.0f;
-//    for (auto& p : particles_) {
-//        // 核心修改：只更新非固定的粒子！
-//        if (!p.is_fixed) {
-//            p.velocity += (p.force / mass) * time_step_;
-//            p.velocity *= damping_;
-//            p.position += p.velocity * time_step_;
-//        }
-//    }
-//}
-//
-//
-//
-//void Simulation2D::handle_boundaries(const Boundary& boundary) {
-//    const auto& boundary_vertices = boundary.get_vertices();
-//    // 如果边界没有顶点，直接返回，不做任何处理
-//    if (boundary_vertices.empty()) {
-//        return;
-//    }
-//
-//    for (auto& p : particles_) {
-//        // 只处理非固定的、且跑到了外面的粒子
-//        if (!p.is_fixed && !boundary.is_inside(p.position)) {
-//
-//            float min_dist_sq = FLT_MAX;
-//            // 正确的修复：在这里初始化 closest_vertex
-//            glm::vec2 closest_vertex = boundary_vertices[0];
-//
-//            for (const auto& v : boundary_vertices) {
-//                float dist_sq = glm::dot(v - p.position, v - p.position);
-//                if (dist_sq < min_dist_sq) {
-//                    min_dist_sq = dist_sq;
-//                    closest_vertex = v;
-//                }
-//            }
-//            p.position = closest_vertex; // 现在这里是绝对安全的
-//            p.velocity *= -0.5f;
-//        }
-//    }
-//}
-//void Simulation2D::step() {
-//    compute_forces();
-//    update_positions();
-//    handle_boundaries(boundary_);
-//
-//    // 更新用于渲染的位置数据
-//    for (int i = 0; i < num_particles_; ++i) {
-//        positions_for_render_[i] = particles_[i].position;
-//    }
-//}
-//
-//const std::vector<glm::vec2>& Simulation2D::get_particle_positions() const {
-//    return positions_for_render_;
-//}
-
 #include "Simulation2D.h"
 #include "Boundary.h"
 #include <random>
 #include <algorithm>
-#include <glm/gtc/type_ptr.hpp> // for glm::dot
+#include <iostream>
 
-// 辅助函数：计算点 p 到线段 a-b 的最近点
-glm::vec2 closest_point_on_segment(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b) {
-    glm::vec2 ab = b - a;
-    glm::vec2 ap = p - a;
+constexpr float PI = 3.1415926535f;
 
-    float proj = glm::dot(ap, ab);
-    float ab_len_sq = glm::dot(ab, ab);
-    float d = proj / ab_len_sq;
-
-    if (d <= 0.0f) {
-        return a; // 最近点是 a
-    }
-    else if (d >= 1.0f) {
-        return b; // 最近点是 b
-    }
-    else {
-        return a + d * ab; // 最近点在线段中间
-    }
+// --- L-infinity Norm (Hu et al., 2025, Sec. 3.4.1) ---
+float Simulation2D::l_inf_norm(const glm::vec2& v) const {
+    return std::max(std::abs(v.x), std::abs(v.y));
 }
 
+// --- Wendland Quintic C6 Kernel & Derivative (Hu et al., 2025, Eq. 13) ---
+// 修复了之前版本中的一个小错误 (term4 * term4)
+float Simulation2D::wendland_c6_kernel(float q) {
+    if (q >= 0.0f && q < 2.0f) {
+        float term = 1.0f - q / 2.0f;
+        float term_sq = term * term;
+        float term4 = term_sq * term_sq;
+        float alpha_d = (78.0f / (28.0f * PI * h_ * h_));
+        return alpha_d * term4 * term4 * (4.0f * q * q * q + 6.25f * q * q + 4.0f * q + 1.0f);
+    }
+    return 0.0f;
+}
 
-// --- 构造函数和 initialize_particles, compute_forces, update_positions 保持不变 ---
-Simulation2D::Simulation2D(const Boundary& boundary)
-    : boundary_(boundary) {
+float Simulation2D::wendland_c6_kernel_derivative(float q) {
+    if (q > 1e-6f && q < 2.0f) {
+        float term = 1.0f - q / 2.0f;
+        float term_sq = term * term;
+        float term3 = term_sq * term;
+        float term4 = term_sq * term_sq;
+        float term7 = term3 * term4;
+        float alpha_d = (78.0f / (28.0f * PI * h_ * h_));
+        // 使用链式法则求导 dW/dr = (dW/dq) * (dq/dr) = (dW/dq) / h
+        return alpha_d * term7 * (-10.0f * q * q * q - 10.25f * q * q - 2.0f * q) / h_;
+    }
+    return 0.0f;
+}
+
+// --- 构造函数和初始化 ---
+Simulation2D::Simulation2D(const Boundary& boundary) : boundary_(boundary) {
+    // 动态计算参数
+    const auto& aabb = boundary.get_aabb();
+    float domain_width = aabb.z - aabb.x;
+    h_ = domain_width / 50.0f; // 目标尺寸 h_t，大约在宽度上分布25个粒子
+
+    mass_ = 1.0f;
+    rest_density_ = 1.0f / (h_ * h_); // 目标密度 rho_t
+    stiffness_ = 5.0f; // 压力常数 P0
+
     initialize_particles(boundary_);
 }
 
 void Simulation2D::initialize_particles(const Boundary& boundary) {
     particles_.clear();
     const glm::vec4& aabb = boundary.get_aabb();
-    float x_min = aabb.x;
-    float y_min = aabb.y;
-    float x_max = aabb.z;
-    float y_max = aabb.w;
-    //// *** 在这里添加视觉补偿 ***
-    //float padding = h_ * 3.0f; // 增加一个粒子多一点的宽度
-    //x_min -= padding;
-    //y_min -= padding;
-    //x_max += padding;
-    //y_max += padding;
-
-    for (float x = x_min; x <= x_max; x += h_) {
-        for (float y = y_min; y <= y_max; y += h_) {
-            glm::vec2 current_pos(x, y);
-            if (boundary.is_inside(current_pos)) {
-                Particle p;
-                p.position = current_pos;
-                p.velocity = glm::vec2(0.0f);
-                p.force = glm::vec2(0.0f);
-
-                bool is_safe =
-                    boundary.is_inside({ x + h_, y }) &&
-                    boundary.is_inside({ x - h_, y }) &&
-                    boundary.is_inside({ x,       y + h_ }) &&
-                    boundary.is_inside({ x,       y - h_ }) &&
-                    boundary.is_inside({ x + h_, y + h_ }) &&
-                    boundary.is_inside({ x - h_, y + h_ }) &&
-                    boundary.is_inside({ x + h_, y - h_ }) &&
-                    boundary.is_inside({ x - h_, y - h_ });
-                p.is_fixed = is_safe;
-                particles_.push_back(p);
+    for (float x = aabb.x; x <= aabb.z; x += h_) {
+        for (float y = aabb.y; y <= aabb.w; y += h_) {
+            if (boundary.is_inside({ x, y })) {
+                particles_.emplace_back(Particle{ {x, y} });
             }
         }
     }
     num_particles_ = particles_.size();
     positions_for_render_.resize(num_particles_);
+    std::cout << "Generated " << num_particles_ << " particles." << std::endl;
 }
 
+// --- SPH 模拟核心步骤 ---
 void Simulation2D::compute_forces() {
     for (auto& p : particles_) {
-        p.force = glm::vec2(0.0f, 0.0f);
+        p.force = glm::vec2(0.0f);
     }
+
     for (int i = 0; i < num_particles_; ++i) {
         for (int j = i + 1; j < num_particles_; ++j) {
             glm::vec2 diff = particles_[i].position - particles_[j].position;
-            float dist_sq = glm::dot(diff, diff);
-            float effective_h = h_ * 1.5f;
-            if (dist_sq < effective_h * effective_h && dist_sq > 1e-8) {
-                float dist = std::sqrt(dist_sq);
-                float force_magnitude = stiffness_ * (effective_h - dist) / dist;
-                glm::vec2 force = force_magnitude * diff;
-                particles_[i].force += force;
-                particles_[j].force -= force;
+
+            // 核心思想：使用 L∞ 范数来判断邻居关系
+            float r_inf = l_inf_norm(diff);
+
+            // Wendland 核函数的作用范围是 2h
+            if (r_inf < 2.0f * h_) {
+                float q = r_inf / h_;
+                if (q > 1e-6) {
+                    // --- 压力 (Hu et al., Eq. 9) ---
+                    // 这个公式驱动粒子达到目标密度 rho_t (rest_density_)
+                    float P_term = (stiffness_ / (rest_density_ * rest_density_)) * 2.0f;
+                    float W_grad_mag = wendland_c6_kernel_derivative(q);
+
+                    // L∞ 归一化向量 (Eq. 5)
+                    glm::vec2 normalized_diff = diff / r_inf;
+
+                    glm::vec2 force = -mass_ * mass_ * P_term * W_grad_mag * normalized_diff;
+
+                    particles_[i].force += force;
+                    particles_[j].force -= force;
+                }
             }
         }
     }
 }
 
 void Simulation2D::update_positions() {
-    float mass = 1.0f;
     for (auto& p : particles_) {
-        if (!p.is_fixed) {
-            p.velocity += (p.force / mass) * time_step_;
-            p.velocity *= damping_;
-            p.position += p.velocity * time_step_;
-        }
+        // 使用质量 mass_ 而不是易出错的密度 density
+        p.velocity += (p.force / mass_) * time_step_;
+        p.velocity *= damping_;
+        p.position += p.velocity * time_step_;
     }
 }
-// ---------------------------------------------------------------------------------
 
+// --- 边界处理 (与上一版相同，但更稳健) ---
+glm::vec2 closest_point_on_segment(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b) {
+    glm::vec2 ab = b - a;
+    glm::vec2 ap = p - a;
+    float proj = glm::dot(ap, ab);
+    float ab_len_sq = glm::dot(ab, ab);
+    if (ab_len_sq < 1e-9) return a;
+    float d = proj / ab_len_sq;
+    if (d <= 0.0f) return a;
+    if (d >= 1.0f) return b;
+    return a + d * ab;
+}
 
-// *** 这是本次最核心的修改 ***
-void Simulation2D::handle_boundaries(const Boundary& boundary) {
-    const auto& boundary_vertices = boundary.get_vertices();
-    if (boundary_vertices.size() < 2) {
-        return;
+glm::vec2 closest_point_on_polygon(const glm::vec2& p, const std::vector<glm::vec2>& vertices) {
+    if (vertices.empty()) return p;
+    glm::vec2 closest_point = vertices[0];
+    float min_dist_sq = FLT_MAX;
+    for (size_t i = 0, j = vertices.size() - 1; i < vertices.size(); j = i++) {
+        glm::vec2 closest_pt_on_edge = closest_point_on_segment(p, vertices[j], vertices[i]);
+        float dist_sq = glm::dot(p - closest_pt_on_edge, p - closest_pt_on_edge);
+        if (dist_sq < min_dist_sq) {
+            min_dist_sq = dist_sq;
+            closest_point = closest_pt_on_edge;
+        }
     }
+    return closest_point;
+}
 
+void Simulation2D::handle_boundaries(const Boundary& boundary) {
     for (auto& p : particles_) {
-        // 只处理跑出去的动态粒子
-        if (!p.is_fixed && !boundary.is_inside(p.position)) {
-
-            glm::vec2 closest_point_on_boundary;
-            float min_dist_sq = FLT_MAX;
-
-            // 遍历边界的每一条“边”
-            for (size_t i = 0, j = boundary_vertices.size() - 1; i < boundary_vertices.size(); j = i++) {
-                const auto& v1 = boundary_vertices[j];
-                const auto& v2 = boundary_vertices[i];
-
-                // 计算粒子到这条边的最近点
-                glm::vec2 closest_pt_on_edge = closest_point_on_segment(p.position, v1, v2);
-                float dist_sq = glm::dot(p.position - closest_pt_on_edge, p.position - closest_pt_on_edge);
-
-                // 如果这个点比之前找到的更近，就更新它
-                if (dist_sq < min_dist_sq) {
-                    min_dist_sq = dist_sq;
-                    closest_point_on_boundary = closest_pt_on_edge;
-                }
-            }
-
-            // 将粒子位置修正到边界上最近的点，并反转速度
-            p.position = closest_point_on_boundary;
-            p.velocity *= -0.5f;
+        if (!boundary.is_inside(p.position)) {
+            p.position = closest_point_on_polygon(p.position, boundary.get_vertices());
+            p.velocity *= -0.5f; // 带阻尼的速度反弹
         }
     }
 }
 
 void Simulation2D::step() {
+    if (num_particles_ == 0) return;
     compute_forces();
     update_positions();
     handle_boundaries(boundary_);

@@ -130,6 +130,7 @@
   <ItemGroup>
     <ClInclude Include="Boundary.h" />
     <ClInclude Include="MeshGenerator2D.h" />
+    <ClInclude Include="models.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Simulation2D.h" />
     <ClInclude Include="Viewer.h" />
@@ -140,6 +141,16 @@
     <ClCompile Include="MeshGenerator2D.cpp" />
     <ClCompile Include="Simulation2D.cpp" />
     <ClCompile Include="Viewer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\line.frag" />
+    <None Include="shaders\line.vert" />
+    <None Include="shaders\point.frag" />
+    <None Include="shaders\point.vert" />
+    <None Include="shaders\point3d.frag" />
+    <None Include="shaders\point3d.vert" />
+    <None Include="shaders\simple.frag" />
+    <None Include="shaders\simple.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

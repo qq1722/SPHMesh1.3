@@ -13,7 +13,7 @@ Viewer::~Viewer() {
     delete point_shader_;
     glDeleteVertexArrays(1, &VAO_boundary_); glDeleteBuffers(1, &VBO_boundary_);
     glDeleteVertexArrays(1, &VAO_particles_); glDeleteBuffers(1, &VBO_particles_);
-    glDeleteVertexArrays(1, &VAO_mesh_); glDeleteBuffers(1, &VBO_mesh_); glDeleteBuffers(1, &EBO_mesh_);
+    //glDeleteVertexArrays(1, &VAO_mesh_); glDeleteBuffers(1, &VBO_mesh_); glDeleteBuffers(1, &EBO_mesh_);
     if (window_) { glfwDestroyWindow(window_); }
     glfwTerminate();
 }
@@ -79,11 +79,11 @@ void Viewer::main_loop() {
         process_input();
 
         if (sim2d_) { sim2d_->step(); }
-        if (generator2d_ && sim2d_ && boundary_) {
+       /* if (generator2d_ && sim2d_ && boundary_) {
             generator2d_->generate(*sim2d_, *boundary_, h_);
-        }
+        }*/
         update_particle_buffers();
-        update_mesh_buffers();
+        //update_mesh_buffers();
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -103,7 +103,7 @@ void Viewer::main_loop() {
             glLineWidth(1.0f);
         }
 
-        if (generator2d_ && shader_) {
+      /*  if (generator2d_ && shader_) {
             shader_->use();
             shader_->setMat4("model", model);
             shader_->setMat4("view", view);
@@ -115,7 +115,7 @@ void Viewer::main_loop() {
                 glDrawElements(GL_LINES, total_line_indices, GL_UNSIGNED_INT, 0);
             }
             glLineWidth(1.0f);
-        }
+        }*/
 
         if (sim2d_ && point_shader_) {
             point_shader_->use();

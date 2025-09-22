@@ -2,49 +2,52 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-// 前向声明，避免循环引用
 class Boundary;
 
 class Simulation2D {
 public:
-    // 构造函数，现在接收一个Boundary对象的引用
     Simulation2D(const Boundary& boundary);
-
-    // 执行一个时间步的模拟
     void step();
-
-    // 获取所有粒子的位置，用于渲染
     const std::vector<glm::vec2>& get_particle_positions() const;
 
+    // 内部结构体的前向声明
+    struct Particle;
+
+    // 修复 C2440 错误：使用完整的作用域名 Simulation2D::Particle
+    const std::vector<Simulation2D::Particle>& get_particles() const { return particles_; }
+
 private:
-    // 初始化时，根据边界和背景网格来放置粒子
     void initialize_particles(const Boundary& boundary);
-
-    // 计算所有粒子受到的力 (核心！)
     void compute_forces();
-
-    // 根据力来更新粒子的速度和位置
     void update_positions();
-
-    // 处理边界，防止粒子跑出区域
     void handle_boundaries(const Boundary& boundary);
 
+    // L-infinity norm as per Hu et al., 2025
+    float l_inf_norm(const glm::vec2& v) const;
+
+    // SPH kernel functions from Hu et al., 2025
+    float wendland_c6_kernel(float q);
+    float wendland_c6_kernel_derivative(float q);
+
+    // 结构体定义移到 private 区域
     struct Particle {
         glm::vec2 position;
-        glm::vec2 velocity;
-        glm::vec2 force;
-        bool is_fixed = false; // 新增！用于区分固定粒子和动态粒子
+        glm::vec2 velocity = glm::vec2(0.0f);
+        glm::vec2 force = glm::vec2(0.0f);
+        float density = 0.0f; // 实际密度
+        float pressure = 0.0f;
     };
 
     std::vector<Particle> particles_;
-    std::vector<glm::vec2> positions_for_render_; // 单独存储位置，方便传输给GPU
-    const Boundary& boundary_; // 持有对边界的引用
+    std::vector<glm::vec2> positions_for_render_;
+    const Boundary& boundary_;
+    int num_particles_ = 0;
 
-    int num_particles_;
-
-    // 模拟参数
+    // --- 经过重新校准的SPH模拟参数 ---
     float time_step_ = 0.005f;
-    float h_ = 0.10f;           // 粒子间距，也用作背景网格尺寸
-    float stiffness_ = 100.0f;
-    float damping_ = 0.99f;
+    float h_;               // 目标尺寸 h_t, 也是平滑半径
+    float mass_;              // 粒子质量
+    float rest_density_;      // 目标密度 rho_t
+    float stiffness_;         // 压力常数 P0
+    float damping_ = 0.998f;   // 阻尼
 };

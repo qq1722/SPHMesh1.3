@@ -30,6 +30,9 @@
     <ClInclude Include="MeshGenerator2D.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="models.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Viewer.cpp">
@@ -47,5 +50,31 @@
     <ClCompile Include="MeshGenerator2D.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\line.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\line.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\point.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\point.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\point3d.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\point3d.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\simple.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\simple.vert">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>
