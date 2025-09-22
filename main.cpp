@@ -25,7 +25,7 @@ int main() {
     Viewer viewer(1280, 720, "SPH Remeshing - Dynamic Mesh Generation");
 
     // 將所有對象都交給 Viewer 來管理
-    viewer.set_boundary(&boundary);
+    //viewer.set_boundary(&boundary);
     viewer.set_simulation2d(&sim);
    // viewer.set_mesh_generator2d(&generator);
 
