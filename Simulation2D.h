@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <glm/glm.hpp>
-#include "BackgroundGrid.h" // 包含新头文件
-#include <memory> // for std::unique_ptr
+#include "BackgroundGrid.h"
+#include <memory>
 
 class Boundary;
 
@@ -12,8 +12,9 @@ public:
         glm::vec2 position;
         glm::vec2 velocity = glm::vec2(0.0f);
         glm::vec2 force = glm::vec2(0.0f);
-        float smoothing_h = 0.0f; // 每个粒子有自己的作用半径h_t
-        float target_density = 0.0f; // 每个粒子有自己的目标密度rho_t
+        float smoothing_h = 0.0f;
+        float target_density = 0.0f;
+        glm::mat2 rotation = glm::mat2(1.0f); // 新增：局部坐标系的旋转矩阵
     };
 
     Simulation2D(const Boundary& boundary);
@@ -27,20 +28,21 @@ private:
     void update_positions();
     void handle_boundaries(const Boundary& boundary);
 
-    // SPH kernel functions
+    // 辅助函数
+    glm::vec2 transform_to_local(const glm::vec2& vec, const glm::mat2& rot_matrix) const;
+    float l_inf_norm(const glm::vec2& v) const;
     float wendland_c6_kernel(float q, float h);
     float wendland_c6_kernel_derivative(float q, float h);
-    float l_inf_norm(const glm::vec2& v) const;
 
     std::vector<Particle> particles_;
     std::vector<glm::vec2> positions_for_render_;
     const Boundary& boundary_;
-    std::unique_ptr<BackgroundGrid> grid_; // 使用智能指针管理背景网格
+    std::unique_ptr<BackgroundGrid> grid_;
     int num_particles_ = 0;
 
     // SPH 模拟参数
     float time_step_ = 0.005f;
     float mass_ = 1.0f;
-    float stiffness_ = 80.0f;
+    float stiffness_ = 100.0f;
     float damping_ = 0.998f;
 };
