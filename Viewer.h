@@ -10,6 +10,7 @@
 #include "Simulation2D.h"
 #include "MeshGenerator2D.h"
 #include "BackgroundGrid.h" 
+#include "DelaunayMeshGenerator.h" 
 
 class Viewer {
 public:
@@ -24,6 +25,7 @@ public:
     void set_mesh_generator2d(MeshGenerator2D* generator);
     void run();
     void set_background_grid(BackgroundGrid* grid); // 新增
+    void set_delaunay_generator(DelaunayMeshGenerator* generator); // 新增
 
 private:
     void init();
@@ -35,7 +37,7 @@ private:
 
     void setup_boundary_buffers();
     void update_particle_buffers();
-   // void update_mesh_buffers();
+    void update_mesh_buffers();
 
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
@@ -64,14 +66,18 @@ private:
     int step_count_ = 0;
     std::ofstream convergence_log_;
 
+    DelaunayMeshGenerator* delaunay_generator_ = nullptr;
+    unsigned int VAO_mesh_ = 0, VBO_mesh_ = 0, EBO_mesh_ = 0;
+    bool show_mesh_ = false; // 新增：控制网格显示
+
 
     unsigned int VAO_boundary_ = 0, VBO_boundary_ = 0;
     unsigned int VAO_particles_ = 0, VBO_particles_ = 0;
-    unsigned int VAO_mesh_ = 0, VBO_mesh_ = 0, EBO_mesh_ = 0;
+   
 
     Boundary* boundary_ = nullptr;
     Simulation2D* sim2d_ = nullptr;
-    MeshGenerator2D* generator2d_ = nullptr;
+   // MeshGenerator2D* generator2d_ = nullptr;
 
     glm::vec3 camera_target_ = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 camera_up_ = glm::vec3(0.0f, 1.0f, 0.0f);

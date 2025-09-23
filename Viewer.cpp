@@ -64,7 +64,21 @@ void Viewer::main_loop() {
         glm::mat4 view = glm::lookAt(camera_pos_, camera_target_, camera_up_);
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width_ / (float)height_, 0.1f, 100.0f);
 
-        if (show_size_field_) {
+        if (show_mesh_ && delaunay_generator_ && shader_) {
+            shader_->use();
+            shader_->setMat4("view", view);
+            shader_->setMat4("projection", projection);
+
+            // 绘制网格线
+            shader_->setVec4("color", glm::vec4(0.9f, 0.9f, 0.9f, 1.0f)); // 浅灰色
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glLineWidth(1.0f);
+            glBindVertexArray(VAO_mesh_);
+            glDrawElements(GL_TRIANGLES, delaunay_generator_->get_triangles().size() * 3, GL_UNSIGNED_INT, 0);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        
+        else if (show_size_field_) {
             // --- 绘制大小场 ---
             if (grid_ && size_field_shader_) {
                 size_field_shader_->use();
@@ -90,6 +104,7 @@ void Viewer::main_loop() {
                 glDrawArrays(GL_LINE_LOOP, 0, boundary_->get_vertices().size());
             }
         }
+        
         else {
             // 绘制边界
             if (boundary_ && shader_) {
@@ -124,6 +139,37 @@ void Viewer::main_loop() {
 
 
 // --- 新增函数 ---
+
+void Viewer::update_mesh_buffers() {
+    if (!delaunay_generator_ || delaunay_generator_->get_vertices().empty()) return;
+
+    glBindVertexArray(VAO_mesh_);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_mesh_);
+    glBufferData(GL_ARRAY_BUFFER, delaunay_generator_->get_vertices().size() * sizeof(glm::vec2), delaunay_generator_->get_vertices().data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_mesh_);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, delaunay_generator_->get_triangles().size() * sizeof(DelaunayMeshGenerator::Triangle), delaunay_generator_->get_triangles().data(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+}
+
+
+void Viewer::set_delaunay_generator(DelaunayMeshGenerator* generator) {
+    delaunay_generator_ = generator;
+    if (delaunay_generator_) {
+        glGenVertexArrays(1, &VAO_mesh_);
+        glGenBuffers(1, &VBO_mesh_);
+        glGenBuffers(1, &EBO_mesh_);
+
+        glBindVertexArray(VAO_mesh_);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_mesh_);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+        glEnableVertexAttribArray(0);
+        glBindVertexArray(0);
+    }
+}
+
 void Viewer::toggle_view_mode() {
     show_size_field_ = !show_size_field_;
     if (show_size_field_) {
@@ -196,12 +242,32 @@ void Viewer::key_callback(GLFWwindow* window, int key, int scancode, int action,
     auto* viewer = static_cast<Viewer*>(glfwGetWindowUserPointer(window));
     if (viewer && action == GLFW_PRESS) { // 只在按下时触发一次
         if (key == GLFW_KEY_V) {
-            viewer->show_size_field_ = !viewer->show_size_field_;
-            if (viewer->show_size_field_) std::cout << "View Mode: Size Field" << std::endl;
-            else std::cout << "View Mode: Particles" << std::endl;
+            // 循环切换视图: Particles -> Size Field -> Mesh
+            if (!viewer->show_size_field_ && !viewer->show_mesh_) {
+                viewer->show_size_field_ = true;
+                std::cout << "View Mode: Size Field" << std::endl;
+            }
+            else if (viewer->show_size_field_) {
+                viewer->show_size_field_ = false;
+                viewer->show_mesh_ = true;
+                std::cout << "View Mode: Triangle Mesh" << std::endl;
+            }
+            else {
+                viewer->show_mesh_ = false;
+                std::cout << "View Mode: Particles" << std::endl;
+            }
         }
         if (key == GLFW_KEY_S) {
             viewer->save_particle_snapshot();
+        }
+        // --- 新增 C 键逻辑 ---
+        if (key == GLFW_KEY_C) {
+            if (viewer->delaunay_generator_ && viewer->sim2d_ && viewer->boundary_) {
+                std::cout << "Generating Delaunay Mesh..." << std::endl;
+                viewer->delaunay_generator_->generate_mesh(viewer->sim2d_->get_particles(), *viewer->boundary_);
+                viewer->update_mesh_buffers();
+                viewer->show_mesh_ = true; // 生成后自动切换到网格视图
+            }
         }
     }
 }
@@ -226,19 +292,19 @@ void Viewer::set_simulation2d(Simulation2D* sim) {
     }
 }
 
-void Viewer::set_mesh_generator2d(MeshGenerator2D* generator) {
-    generator2d_ = generator;
-    if (generator2d_) {
-        glGenVertexArrays(1, &VAO_mesh_);
-        glGenBuffers(1, &VBO_mesh_);
-        glGenBuffers(1, &EBO_mesh_);
-        glBindVertexArray(VAO_mesh_);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO_mesh_);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
-        glEnableVertexAttribArray(0);
-        glBindVertexArray(0);
-    }
-}
+//void Viewer::set_mesh_generator2d(MeshGenerator2D* generator) {
+//    generator2d_ = generator;
+//    if (generator2d_) {
+//        glGenVertexArrays(1, &VAO_mesh_);
+//        glGenBuffers(1, &VBO_mesh_);
+//        glGenBuffers(1, &EBO_mesh_);
+//        glBindVertexArray(VAO_mesh_);
+//        glBindBuffer(GL_ARRAY_BUFFER, VBO_mesh_);
+//        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+//        glEnableVertexAttribArray(0);
+//        glBindVertexArray(0);
+//    }
+//}
 
 
 // --- 靜態回調函數 ---

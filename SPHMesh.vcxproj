@@ -131,7 +131,7 @@
   <ItemGroup>
     <ClInclude Include="BackgroundGrid.h" />
     <ClInclude Include="Boundary.h" />
-    <ClInclude Include="MeshGenerator2D.h" />
+    <ClInclude Include="DelaunayMeshGenerator.h" />
     <ClInclude Include="models.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Simulation2D.h" />
@@ -141,8 +141,8 @@
   <ItemGroup>
     <ClCompile Include="BackgroundGrid.cpp" />
     <ClCompile Include="Boundary.cpp" />
+    <ClCompile Include="DelaunayMeshGenerator.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MeshGenerator2D.cpp" />
     <ClCompile Include="Simulation2D.cpp" />
     <ClCompile Include="Viewer.cpp" />
   </ItemGroup>

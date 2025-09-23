@@ -27,9 +27,6 @@
     <ClInclude Include="Boundary.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MeshGenerator2D.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="models.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -37,6 +34,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DelaunayMeshGenerator.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -53,10 +53,10 @@
     <ClCompile Include="Boundary.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MeshGenerator2D.cpp">
+    <ClCompile Include="BackgroundGrid.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BackgroundGrid.cpp">
+    <ClCompile Include="DelaunayMeshGenerator.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
