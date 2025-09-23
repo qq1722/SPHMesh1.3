@@ -3,6 +3,44 @@
 #include <glm/glm.hpp>
 #include <algorithm> // for std::min/max
 #include <iostream>
+#include <cmath> // for sin, cos
+#include <random> // for random numbers
+//float M_PI = 3.1415926535f;
+// 一个简单的函数，用于生成0到1之间的随机浮点数
+float random_float(float min, float max) {
+    static std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<float> distribution(min, max);
+    return distribution(generator);
+}
+
+std::vector<glm::vec2> create_complex_lake(int num_vertices, float avg_radius, float irregularity, float spikeyness) {
+    std::vector<glm::vec2> vertices;
+    float angle_step = 2.0f * 3.1415926535f / num_vertices;
+
+    for (int i = 0; i < num_vertices; ++i) {
+        float angle = i * angle_step;
+
+        // 基础圆形半径
+        float base_radius = avg_radius;
+
+        // 添加不规则性扰动
+        float radius = base_radius + random_float(-irregularity, irregularity);
+
+        // 添加一些随机的"尖刺"
+        if (random_float(0.0f, 1.0f) < spikeyness) {
+            radius *= random_float(1.1f, 1.3f);
+        }
+        else if (random_float(0.0f, 1.0f) < spikeyness) {
+            radius *= random_float(0.7f, 0.9f);
+        }
+
+        float x = radius * cos(angle);
+        float y = radius * sin(angle);
+        vertices.push_back({ x, y });
+    }
+
+    return vertices;
+}
 
 // 函数：获取一个更复杂的、类似湖泊的边界形状
 inline std::vector<glm::vec2> get_lake_shape_vertices() {

@@ -85,5 +85,11 @@
     <None Include="shaders\simple.vert">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="shaders\size_field.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shaders\size_field.vert">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

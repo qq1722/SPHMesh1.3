@@ -18,7 +18,7 @@ glm::vec2 Simulation2D::transform_to_local(const glm::vec2& vec, const glm::mat2
 Simulation2D::Simulation2D(const Boundary& boundary) : boundary_(boundary) {
     const auto& aabb = boundary.get_aabb();
     float domain_width = aabb.z - aabb.x;
-    float grid_cell_size = domain_width / 80.0f;
+    float grid_cell_size = domain_width / 50.0f;
     grid_ = std::make_unique<BackgroundGrid>(boundary, grid_cell_size);
     initialize_particles(boundary);
 }
@@ -171,4 +171,13 @@ void Simulation2D::step() {
 
 const std::vector<glm::vec2>& Simulation2D::get_particle_positions() const {
     return positions_for_render_;
+}
+
+// 新增函数实现
+float Simulation2D::get_kinetic_energy() const {
+    float total_energy = 0.0f;
+    for (const auto& p : particles_) {
+        total_energy += 0.5f * mass_ * glm::dot(p.velocity, p.velocity);
+    }
+    return total_energy;
 }

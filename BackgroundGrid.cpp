@@ -45,9 +45,12 @@ void BackgroundGrid::compute_fields(const Boundary& boundary) {
             float dist_to_boundary = glm::distance(grid_pos, closest_point_on_polygon(grid_pos, boundary_vertices));
             sdf[y * width_ + x] = boundary.is_inside(grid_pos) ? dist_to_boundary : -dist_to_boundary;
 
-            float influence_radius = h_max * 5.0f; // 增大影响半径
+            // --- 核心视觉效果修改 ---
+            float influence_radius = h_max * 5.0f;
             float t = std::min(dist_to_boundary / influence_radius, 1.0f);
-            target_size_field_[y * width_ + x] = glm::mix(h_min, h_max, t);
+            // 使用 t*t (二次方) 会使得靠近边界的区域尺寸变化更慢，远离边界的区域变化更快
+            // 这会产生更清晰的“等高线”视觉效果
+            target_size_field_[y * width_ + x] = glm::mix(h_min, h_max, t * t);
         }
     }
 

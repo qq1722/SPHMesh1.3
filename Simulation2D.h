@@ -21,6 +21,10 @@ public:
     void step();
     const std::vector<glm::vec2>& get_particle_positions() const;
     const std::vector<Particle>& get_particles() const { return particles_; }
+    // 新增：计算系统总动能，用于收敛判断
+    float get_kinetic_energy() const;
+    // 新增：提供对背景网格的访问
+    BackgroundGrid* get_background_grid() const { return grid_.get(); }
 
 private:
     void initialize_particles(const Boundary& boundary);
@@ -43,6 +47,6 @@ private:
     // SPH 模拟参数
     float time_step_ = 0.005f;
     float mass_ = 1.0f;
-    float stiffness_ = 100.0f;
+    float stiffness_ = 1.0f;//releace模式1.0f好用
     float damping_ = 0.998f;
 };

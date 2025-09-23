@@ -19,15 +19,19 @@ int main() {
     // --- 2. 創建所有需要的對象 ---
     Boundary boundary(active_shape_vertices);
     Simulation2D sim(boundary);
-    MeshGenerator2D generator;
+    //MeshGenerator2D generator;
 
     // --- 3. 設置 Viewer ---
     Viewer viewer(1280, 720, "SPH Remeshing - Dynamic Mesh Generation");
 
     // 將所有對象都交給 Viewer 來管理
-    //viewer.set_boundary(&boundary);
+   // viewer.set_boundary(&boundary);
     viewer.set_simulation2d(&sim);
    // viewer.set_mesh_generator2d(&generator);
+
+   // 直接从 sim 对象获取 grid 指针，代码更清晰
+    viewer.set_background_grid(sim.get_background_grid());
+
 
     // --- 4. 啟動主循環 ---
     viewer.run();

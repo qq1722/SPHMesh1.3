@@ -10,6 +10,13 @@ public:
     float get_target_size(const glm::vec2& pos) const;
     // 新增：获取指定位置的目标方向 D_t
     glm::vec2 get_target_direction(const glm::vec2& pos) const;
+    // --- 新增公共接口 ---
+    int get_width() const { return width_; }
+    int get_height() const { return height_; }
+    float get_cell_size() const { return cell_size_; }
+    glm::vec2 get_min_coords() const { return min_coords_; }
+    const std::vector<float>& get_target_size_field() const { return target_size_field_; }
+    // --- 结束 ---
 
 private:
     void compute_fields(const Boundary& boundary);
