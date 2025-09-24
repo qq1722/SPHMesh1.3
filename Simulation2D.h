@@ -15,6 +15,7 @@ public:
         float smoothing_h = 0.0f;
         float target_density = 0.0f;
         glm::mat2 rotation = glm::mat2(1.0f); // 新增：局部坐标系的旋转矩阵
+		bool is_boundary = false;
     };
 
     Simulation2D(const Boundary& boundary);

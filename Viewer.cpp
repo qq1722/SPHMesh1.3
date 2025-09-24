@@ -262,12 +262,25 @@ void Viewer::key_callback(GLFWwindow* window, int key, int scancode, int action,
         }
         // --- 新增 C 键逻辑 ---
         if (key == GLFW_KEY_C) {
-            if (viewer->delaunay_generator_ && viewer->sim2d_ && viewer->boundary_) {
+            // --- 关键修复：添加诊断性检查 ---
+            if (!viewer->delaunay_generator_) {
+                std::cerr << "Error: Delaunay Generator is not set!" << std::endl;
+                return;
+            }
+            if (!viewer->sim2d_) {
+                std::cerr << "Error: Simulation is not set!" << std::endl;
+                return;
+            }
+            if (!viewer->boundary_) {
+                std::cerr << "Error: Boundary is not set!" << std::endl;
+                return;
+            }
+            
                 std::cout << "Generating Delaunay Mesh..." << std::endl;
                 viewer->delaunay_generator_->generate_mesh(viewer->sim2d_->get_particles(), *viewer->boundary_);
                 viewer->update_mesh_buffers();
                 viewer->show_mesh_ = true; // 生成后自动切换到网格视图
-            }
+            
         }
     }
 }
