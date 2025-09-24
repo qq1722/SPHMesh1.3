@@ -10,7 +10,8 @@
 #include "Simulation2D.h"
 #include "MeshGenerator2D.h"
 #include "BackgroundGrid.h" 
-#include "DelaunayMeshGenerator.h" 
+//#include "DelaunayMeshGenerator.h" 
+#include "CGALMeshGenerator.h"
 
 class Viewer {
 public:
@@ -25,7 +26,7 @@ public:
     void set_mesh_generator2d(MeshGenerator2D* generator);
     void run();
     void set_background_grid(BackgroundGrid* grid); // 新增
-    void set_delaunay_generator(DelaunayMeshGenerator* generator); // 新增
+    void set_cgal_generator(CGALMeshGenerator* generator); // 新增
 
 private:
     void init();
@@ -66,7 +67,7 @@ private:
     int step_count_ = 0;
     std::ofstream convergence_log_;
 
-    DelaunayMeshGenerator* delaunay_generator_ = nullptr;
+    CGALMeshGenerator* delaunay_generator_ = nullptr;
     unsigned int VAO_mesh_ = 0, VBO_mesh_ = 0, EBO_mesh_ = 0;
     bool show_mesh_ = false; // 新增：控制网格显示
 

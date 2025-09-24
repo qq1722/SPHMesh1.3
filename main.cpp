@@ -19,7 +19,7 @@ int main() {
     // --- 2. 創建所有需要的對象 ---
     Boundary boundary(active_shape_vertices);
     Simulation2D sim(boundary);
-    DelaunayMeshGenerator generator;
+    CGALMeshGenerator  generator;
     //MeshGenerator2D generator;
 
     // --- 3. 設置 Viewer ---
@@ -33,7 +33,7 @@ int main() {
    // 直接从 sim 对象获取 grid 指针，代码更清晰
     viewer.set_background_grid(sim.get_background_grid());
 
-    viewer.set_delaunay_generator(&generator);
+    viewer.set_cgal_generator(&generator);
 
 
     // --- 4. 啟動主循環 ---

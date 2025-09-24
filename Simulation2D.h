@@ -2,6 +2,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "BackgroundGrid.h"
+//#include "DelaunayMeshGenerator.h"
 #include <memory>
 
 class Boundary;
@@ -26,6 +27,7 @@ public:
     float get_kinetic_energy() const;
     // 新增：提供对背景网格的访问
     BackgroundGrid* get_background_grid() const { return grid_.get(); }
+    float get_min_target_size() const { return h_min_; } // <-- 新增
 
 private:
     void initialize_particles(const Boundary& boundary);
@@ -50,4 +52,6 @@ private:
     float mass_ = 1.0f;
     float stiffness_ = 1.0f;//releace模式1.0f好用
     float damping_ = 0.998f;
+    float h_max_;             // 最大目标尺寸
+    float h_min_;             // <-- 新增：补上这个缺失的声明
 };

@@ -149,13 +149,13 @@ void Viewer::update_mesh_buffers() {
     glBufferData(GL_ARRAY_BUFFER, delaunay_generator_->get_vertices().size() * sizeof(glm::vec2), delaunay_generator_->get_vertices().data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_mesh_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, delaunay_generator_->get_triangles().size() * sizeof(DelaunayMeshGenerator::Triangle), delaunay_generator_->get_triangles().data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, delaunay_generator_->get_triangles().size() * sizeof(CGALMeshGenerator::Triangle), delaunay_generator_->get_triangles().data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
 }
 
 
-void Viewer::set_delaunay_generator(DelaunayMeshGenerator* generator) {
+void Viewer::set_cgal_generator(CGALMeshGenerator* generator) {
     delaunay_generator_ = generator;
     if (delaunay_generator_) {
         glGenVertexArrays(1, &VAO_mesh_);
@@ -277,7 +277,7 @@ void Viewer::key_callback(GLFWwindow* window, int key, int scancode, int action,
             }
             
                 std::cout << "Generating Delaunay Mesh..." << std::endl;
-                viewer->delaunay_generator_->generate_mesh(viewer->sim2d_->get_particles(), *viewer->boundary_);
+                viewer->delaunay_generator_->generate_mesh(viewer->sim2d_->get_particles(), *viewer->boundary_);// 传入最小间距);
                 viewer->update_mesh_buffers();
                 viewer->show_mesh_ = true; // 生成后自动切换到网格视图
             

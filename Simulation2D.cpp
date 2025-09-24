@@ -18,7 +18,7 @@ glm::vec2 Simulation2D::transform_to_local(const glm::vec2& vec, const glm::mat2
 Simulation2D::Simulation2D(const Boundary& boundary) : boundary_(boundary) {
     const auto& aabb = boundary.get_aabb();
     float domain_width = aabb.z - aabb.x;
-    float grid_cell_size = domain_width / 50.0f;
+    float grid_cell_size = domain_width / 80.0f;
     grid_ = std::make_unique<BackgroundGrid>(boundary, grid_cell_size);
     initialize_particles(boundary);
 }
