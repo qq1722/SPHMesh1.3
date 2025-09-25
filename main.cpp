@@ -3,6 +3,7 @@
 #include "Simulation2D.h"
 #include "MeshGenerator2D.h"
 #include "models.h"
+#include "qmorph.h"
 #include <iostream>
 #include <vector>
 #include <glm/glm.hpp>
@@ -20,6 +21,7 @@ int main() {
     Boundary boundary(active_shape_vertices);
     Simulation2D sim(boundary);
     CGALMeshGenerator  generator;
+    Qmorph qmorph_converter;
     //MeshGenerator2D generator;
 
     // --- 3. ÔOÖÃ Viewer ---
@@ -34,6 +36,7 @@ int main() {
     viewer.set_background_grid(sim.get_background_grid());
 
     viewer.set_cgal_generator(&generator);
+    viewer.set_qmorph_generator(&qmorph_converter);
 
 
     // --- 4. †¢„ÓÖ÷Ñ­­h ---

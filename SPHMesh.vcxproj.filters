@@ -45,6 +45,9 @@
     <ClInclude Include="CGALMeshGenerator.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Qmorph.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Viewer.cpp">
@@ -66,6 +69,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CGALMeshGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Qmorph.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

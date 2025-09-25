@@ -135,6 +135,7 @@
     <ClInclude Include="CGALMeshGenerator.h" />
     <ClInclude Include="DelaunayMeshGenerator.h" />
     <ClInclude Include="models.h" />
+    <ClInclude Include="Qmorph.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Simulation2D.h" />
     <ClInclude Include="Utils.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="CGALMeshGenerator.cpp" />
     <ClCompile Include="DelaunayMeshGenerator.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Qmorph.cpp" />
     <ClCompile Include="Simulation2D.cpp" />
     <ClCompile Include="Viewer.cpp" />
   </ItemGroup>

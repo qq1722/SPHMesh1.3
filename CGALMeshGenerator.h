@@ -38,6 +38,10 @@ public:
     struct Triangle {
         unsigned int v0, v1, v2;
     };
+    // Quad 结构体定义移到 Qmorph.h 中更合适，但为了 Viewer 能访问，暂时保留
+    struct Quad {
+        unsigned int v0, v1, v2, v3;
+    };
 
     CGALMeshGenerator() = default;
     ~CGALMeshGenerator() = default;
@@ -47,8 +51,11 @@ public:
 
     const std::vector<glm::vec2>& get_vertices() const { return vertices_; }
     const std::vector<Triangle>& get_triangles() const { return triangles_; }
+    const std::vector<Quad>& get_quads() const { return quads_; }
 
 private:
     std::vector<glm::vec2> vertices_;
     std::vector<Triangle> triangles_;
+    std::vector<Quad> quads_; // 新增
+
 };

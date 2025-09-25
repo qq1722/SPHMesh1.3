@@ -65,17 +65,37 @@ void Viewer::main_loop() {
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width_ / (float)height_, 0.1f, 100.0f);
 
         if (show_mesh_ && delaunay_generator_ && shader_) {
-            shader_->use();
-            shader_->setMat4("view", view);
-            shader_->setMat4("projection", projection);
+            if (delaunay_generator_ && shader_) {
+                shader_->use();
+                shader_->setMat4("model", model);
+                shader_->setMat4("view", view);
+                shader_->setMat4("projection", projection);
+                shader_->setVec4("color", glm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glLineWidth(1.0f);
 
-            // 绘制网格线
-            shader_->setVec4("color", glm::vec4(0.9f, 0.9f, 0.9f, 1.0f)); // 浅灰色
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glLineWidth(1.0f);
-            glBindVertexArray(VAO_mesh_);
-            glDrawElements(GL_TRIANGLES, delaunay_generator_->get_triangles().size() * 3, GL_UNSIGNED_INT, 0);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glBindVertexArray(VAO_mesh_);
+
+                // 绘制剩余的三角形
+                if (!delaunay_generator_->get_triangles().empty()) {
+                    glDrawElements(GL_TRIANGLES, delaunay_generator_->get_triangles().size() * 3, GL_UNSIGNED_INT, 0);
+                }
+
+                // 绘制四边形 (需要更新 EBO)
+                if (!delaunay_generator_->get_quads().empty()) {
+                    std::vector<unsigned int> quad_line_indices;
+                    for (const auto& q : delaunay_generator_->get_quads()) {
+                        quad_line_indices.push_back(q.v0); quad_line_indices.push_back(q.v1);
+                        quad_line_indices.push_back(q.v1); quad_line_indices.push_back(q.v2);
+                        quad_line_indices.push_back(q.v2); quad_line_indices.push_back(q.v3);
+                        quad_line_indices.push_back(q.v3); quad_line_indices.push_back(q.v0);
+                    }
+                    glBufferData(GL_ELEMENT_ARRAY_BUFFER, quad_line_indices.size() * sizeof(unsigned int), quad_line_indices.data(), GL_DYNAMIC_DRAW);
+                    glDrawElements(GL_LINES, quad_line_indices.size(), GL_UNSIGNED_INT, 0);
+                }
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
         }
         
         else if (show_size_field_) {
@@ -145,11 +165,35 @@ void Viewer::update_mesh_buffers() {
 
     glBindVertexArray(VAO_mesh_);
 
+    // 更新顶点数据
     glBindBuffer(GL_ARRAY_BUFFER, VBO_mesh_);
     glBufferData(GL_ARRAY_BUFFER, delaunay_generator_->get_vertices().size() * sizeof(glm::vec2), delaunay_generator_->get_vertices().data(), GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_mesh_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, delaunay_generator_->get_triangles().size() * sizeof(CGALMeshGenerator::Triangle), delaunay_generator_->get_triangles().data(), GL_STATIC_DRAW);
+    // 更新索引数据 (EBO)
+    // 根据当前视图模式决定 EBO 的内容
+    if (current_view_ == ViewMode::Triangles) {
+        const auto& tris = delaunay_generator_->get_triangles();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_mesh_);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, tris.size() * sizeof(CGALMeshGenerator::Triangle), tris.data(), GL_STATIC_DRAW);
+    }
+    else if (current_view_ == ViewMode::Quads) {
+        // 对于四边形，我们需要为线框模式创建边的索引
+        std::vector<unsigned int> line_indices;
+        line_indices.reserve(quads_.size() * 8 + remaining_triangles_.size() * 6);
+        for (const auto& q : quads_) {
+            line_indices.push_back(q.v0); line_indices.push_back(q.v1);
+            line_indices.push_back(q.v1); line_indices.push_back(q.v2);
+            line_indices.push_back(q.v2); line_indices.push_back(q.v3);
+            line_indices.push_back(q.v3); line_indices.push_back(q.v0);
+        }
+        for (const auto& t : remaining_triangles_) {
+            line_indices.push_back(t.v0); line_indices.push_back(t.v1);
+            line_indices.push_back(t.v1); line_indices.push_back(t.v2);
+            line_indices.push_back(t.v2); line_indices.push_back(t.v0);
+        }
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_mesh_);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, line_indices.size() * sizeof(unsigned int), line_indices.data(), GL_DYNAMIC_DRAW);
+    }
 
     glBindVertexArray(0);
 }
@@ -276,10 +320,25 @@ void Viewer::key_callback(GLFWwindow* window, int key, int scancode, int action,
                 return;
             }
             
-                std::cout << "Generating Delaunay Mesh..." << std::endl;
-                viewer->delaunay_generator_->generate_mesh(viewer->sim2d_->get_particles(), *viewer->boundary_);// 传入最小间距);
+            // 如果当前不在网格模式，则生成初始三角网格
+            if (viewer->current_view_ != ViewMode::Triangles && viewer->current_view_ != ViewMode::Quads) {
+                std::cout << "Generating Delaunay Mesh with CGAL..." << std::endl;
+                viewer->delaunay_generator_->generate_mesh(viewer->sim2d_->get_particles(), *viewer->boundary_);
                 viewer->update_mesh_buffers();
-                viewer->show_mesh_ = true; // 生成后自动切换到网格视图
+                viewer->current_view_ = ViewMode::Triangles;
+                std::cout << "View Mode: Triangle Mesh. Press 'C' again to convert to Quads." << std::endl;
+            }
+            else if (viewer->current_view_ == ViewMode::Triangles) {
+                if (viewer->qmorph_converter_) {
+                    std::cout << "Converting Triangles to Quads using Q-Morph logic..." << std::endl;
+                    auto result = viewer->qmorph_converter_->run(*viewer->delaunay_generator_);
+                    viewer->quads_ = result.quads;
+                    viewer->remaining_triangles_ = result.remaining_triangles;
+                    viewer->update_mesh_buffers(); // 更新缓冲区以反映新网格
+                    viewer->current_view_ = ViewMode::Quads;
+                    std::cout << "View Mode: Quadrilateral-Dominant Mesh." << std::endl;
+                }
+            }
             
         }
     }
@@ -318,6 +377,10 @@ void Viewer::set_simulation2d(Simulation2D* sim) {
 //        glBindVertexArray(0);
 //    }
 //}
+
+void Viewer::set_qmorph_generator(Qmorph* converter) {
+    qmorph_converter_ = converter;
+}
 
 
 // --- 靜態回調函數 ---

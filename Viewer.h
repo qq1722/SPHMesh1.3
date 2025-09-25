@@ -12,6 +12,7 @@
 #include "BackgroundGrid.h" 
 //#include "DelaunayMeshGenerator.h" 
 #include "CGALMeshGenerator.h"
+#include "qmorph.h"
 
 class Viewer {
 public:
@@ -27,6 +28,7 @@ public:
     void run();
     void set_background_grid(BackgroundGrid* grid); // 新增
     void set_cgal_generator(CGALMeshGenerator* generator); // 新增
+    void set_qmorph_generator(Qmorph* converter);
 
 private:
     void init();
@@ -71,6 +73,11 @@ private:
     unsigned int VAO_mesh_ = 0, VBO_mesh_ = 0, EBO_mesh_ = 0;
     bool show_mesh_ = false; // 新增：控制网格显示
 
+    Qmorph* qmorph_converter_ = nullptr; // 新增
+    // 新增：存储Q-Morph转换结果
+    std::vector<CGALMeshGenerator::Quad> quads_;
+    std::vector<CGALMeshGenerator::Triangle> remaining_triangles_;
+
 
     unsigned int VAO_boundary_ = 0, VBO_boundary_ = 0;
     unsigned int VAO_particles_ = 0, VBO_particles_ = 0;
@@ -91,4 +98,7 @@ private:
     double last_x_, last_y_;
 
     float h_ = 0.10f;
+
+    enum class ViewMode { Particles, SizeField, Triangles, Quads }; // <-- 增加 Quads 模式
+    ViewMode current_view_ = ViewMode::Particles;
 };
